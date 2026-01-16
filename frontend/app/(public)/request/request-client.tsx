@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -25,7 +25,7 @@ export default function RequestClient() {
     (async () => {
       setErr("");
       try {
-        const res = await fetch(`${API}/businesses`);
+        const res = await fetch(`${API}/businesses`, { cache: "no-store" });
         if (!res.ok) throw new Error(await res.text());
         const data = await res.json();
         setBizList(data.businesses || data || []);
