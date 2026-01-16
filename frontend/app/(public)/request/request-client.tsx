@@ -1,15 +1,19 @@
 ﻿"use client";
 
+import { createClient } from "@supabase/supabase-js";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
-const API = process.env.NEXT_PUBLIC_API_BASE!;
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
-type Biz = { id: string; business_name: string; category: string; town: string | null };
+type Biz = { id: string; business_name: string | null; town: string | null };
 
 export default function RequestClient() {
   const sp = useSearchParams();
-  const preselect = sp.get("business") || "";
+  const preselect = sp.get("business_id") || "";
 
   const [bizList, setBizList] = useState<Biz[]>([]);
   const [businessId, setBusinessId] = useState(preselect);
@@ -18,20 +22,24 @@ export default function RequestClient() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
+
   const [ok, setOk] = useState("");
   const [err, setErr] = useState("");
 
   useEffect(() => {
     (async () => {
       setErr("");
-      try {
-        const res = await fetch(`${API}/businesses`, { cache: "no-store" });
-        if (!res.ok) throw new Error(await res.text());
-        const data = await res.json();
-        setBizList(data.businesses || data || []);
-      } catch (e: any) {
-        setErr(e.message || "Failed to load businesses");
+      const { data, error } = await supabase
+        .from("businesses")
+        .select("id,business_name,town")
+        .eq("subscription_status", "active")
+        .order("business_name", { ascending: true });
+
+      if (error) {
+        setErr(error.message);
+        return;
       }
+      setBizList((data as Biz[]) ?? []);
     })();
   }, []);
 
@@ -43,13 +51,15 @@ export default function RequestClient() {
     try {
       if (!businessId) throw new Error("Please select a business");
 
-      const res = await fetch(`${API}/leads`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ business_id: businessId, name, email, phone, message }),
+      const { error } = await supabase.from("leads").insert({
+        business_id: businessId,
+        name,
+        email,
+        phone,
+        message,
       });
 
-      if (!res.ok) throw new Error(await res.text());
+      if (error) throw new Error(error.message);
 
       setOk("Request sent!");
       setName("");
@@ -63,7 +73,7 @@ export default function RequestClient() {
 
   return (
     <main style={{ maxWidth: 900, margin: "40px auto", padding: 16 }}>
-      <h1>Request Service</h1>
+      <h1>Request a Quote</h1>
 
       {err && <p style={{ color: "tomato" }}>{err}</p>}
       {ok && <p style={{ color: "limegreen" }}>{ok}</p>}
@@ -75,7 +85,7 @@ export default function RequestClient() {
             <option value="">Select…</option>
             {bizList.map((b) => (
               <option key={b.id} value={b.id}>
-                {b.business_name} {b.town ? `(${b.town})` : ""}
+                {b.business_name ?? "Business"} {b.town ? `(${b.town})` : ""}
               </option>
             ))}
           </select>
@@ -88,7 +98,7 @@ export default function RequestClient() {
 
         <label>
           Email
-          <input value={email} onChange={(e) => setEmail(e.target.value)} style={{ width: "100%", padding: 8 }} />
+          <input value={email} onChange={(e) => setEmail(e.target.value)} required style={{ width: "100%", padding: 8 }} />
         </label>
 
         <label>
@@ -97,8 +107,8 @@ export default function RequestClient() {
         </label>
 
         <label>
-          What do you need?
-          <textarea value={message} onChange={(e) => setMessage(e.target.value)} required rows={5} style={{ width: "100%", padding: 8 }} />
+          Message
+          <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={5} style={{ width: "100%", padding: 8 }} />
         </label>
 
         <button type="submit" style={{ padding: 10 }}>

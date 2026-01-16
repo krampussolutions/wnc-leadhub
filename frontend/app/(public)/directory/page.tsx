@@ -1,19 +1,28 @@
 ﻿export const dynamic = "force-dynamic";
 
+import { createClient } from "@supabase/supabase-js";
+
 type Business = {
   id: string;
-  business_name: string;
-  category: string;
-  town?: string | null;
-  phone?: string | null;
+  business_name: string | null;
+  category: string | null;
+  town: string | null;
 };
 
-const API = process.env.NEXT_PUBLIC_API_BASE!;
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 async function getBusinesses(): Promise<Business[]> {
-  const res = await fetch(`${API}/businesses`, { cache: "no-store" });
-  if (!res.ok) return [];
-  return res.json();
+  const { data, error } = await supabase
+    .from("businesses")
+    .select("id,business_name,category,town")
+    .eq("subscription_status", "active")
+    .order("business_name", { ascending: true });
+
+  if (error) return [];
+  return (data as Business[]) ?? [];
 }
 
 export default async function DirectoryPage() {
@@ -27,14 +36,14 @@ export default async function DirectoryPage() {
       <div style={{ display: "grid", gap: 12, marginTop: 16 }}>
         {businesses.length === 0 ? (
           <div style={{ opacity: 0.8 }}>
-            No businesses found. (Tip: set subscription_status = "active" for your test business.)
+            No businesses found. (Tip: set your test business subscription_status = "active".)
           </div>
         ) : (
           businesses.map((b) => (
             <div key={b.id} style={{ border: "1px solid #333", borderRadius: 12, padding: 12 }}>
-              <div style={{ fontWeight: 700 }}>{b.business_name}</div>
+              <div style={{ fontWeight: 700 }}>{b.business_name ?? "Business"}</div>
               <div style={{ opacity: 0.8 }}>
-                {b.category}
+                {b.category ?? "Category"}
                 {b.town ? ` • ${b.town}` : ""}
               </div>
               <div style={{ marginTop: 10 }}>
