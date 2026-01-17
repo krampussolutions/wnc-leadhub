@@ -11,7 +11,6 @@ export default function AuthCallbackPage() {
   useEffect(() => {
     (async () => {
       const code = sp.get("code");
-
       if (code) {
         const { error } = await supabase.auth.exchangeCodeForSession(code);
         if (error) {
@@ -19,7 +18,6 @@ export default function AuthCallbackPage() {
           return;
         }
       }
-
       const next = sp.get("next") || "/dashboard";
       router.replace(next);
     })();
