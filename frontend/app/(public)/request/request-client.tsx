@@ -1,19 +1,14 @@
 ﻿"use client";
 
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabase";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { useEffect, useMemo, useState } from "react";
 
 type Biz = { id: string; business_name: string | null; town: string | null };
 
 export default function RequestClient() {
   const sp = useSearchParams();
-  const preselect = sp.get("business_id") || "";
+  const preselect = useMemo(() => sp.get("business_id") || "", [sp]);
 
   const [bizList, setBizList] = useState<Biz[]>([]);
   const [businessId, setBusinessId] = useState(preselect);
@@ -26,9 +21,15 @@ export default function RequestClient() {
   const [ok, setOk] = useState("");
   const [err, setErr] = useState("");
 
+  // keep dropdown synced with URL preselect (if user clicks from directory)
+  useEffect(() => {
+    setBusinessId(preselect);
+  }, [preselect]);
+
   useEffect(() => {
     (async () => {
       setErr("");
+
       const { data, error } = await supabase
         .from("businesses")
         .select("id,business_name,town")
@@ -39,6 +40,7 @@ export default function RequestClient() {
         setErr(error.message);
         return;
       }
+
       setBizList((data as Biz[]) ?? []);
     })();
   }, []);
@@ -67,7 +69,7 @@ export default function RequestClient() {
       setPhone("");
       setMessage("");
     } catch (e: any) {
-      setErr(e.message || "Failed to send");
+      setErr(e?.message || "Failed to send");
     }
   }
 
@@ -81,7 +83,11 @@ export default function RequestClient() {
       <form onSubmit={submit} style={{ display: "grid", gap: 10, marginTop: 16 }}>
         <label>
           Business
-          <select value={businessId} onChange={(e) => setBusinessId(e.target.value)} style={{ width: "100%", padding: 8 }}>
+          <select
+            value={businessId}
+            onChange={(e) => setBusinessId(e.target.value)}
+            style={{ width: "100%", padding: 8 }}
+          >
             <option value="">Select…</option>
             {bizList.map((b) => (
               <option key={b.id} value={b.id}>
@@ -93,22 +99,41 @@ export default function RequestClient() {
 
         <label>
           Your name
-          <input value={name} onChange={(e) => setName(e.target.value)} required style={{ width: "100%", padding: 8 }} />
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            style={{ width: "100%", padding: 8 }}
+          />
         </label>
 
         <label>
           Email
-          <input value={email} onChange={(e) => setEmail(e.target.value)} required style={{ width: "100%", padding: 8 }} />
+          <input
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            style={{ width: "100%", padding: 8 }}
+          />
         </label>
 
         <label>
           Phone
-          <input value={phone} onChange={(e) => setPhone(e.target.value)} style={{ width: "100%", padding: 8 }} />
+          <input
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            style={{ width: "100%", padding: 8 }}
+          />
         </label>
 
         <label>
           Message
-          <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={5} style={{ width: "100%", padding: 8 }} />
+          <textarea
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            rows={5}
+            style={{ width: "100%", padding: 8 }}
+          />
         </label>
 
         <button type="submit" style={{ padding: 10 }}>
