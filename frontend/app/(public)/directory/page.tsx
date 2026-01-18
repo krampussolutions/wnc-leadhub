@@ -1,14 +1,19 @@
 ﻿export const dynamic = "force-dynamic";
 
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@supabase/supabase-js";
 
 type Business = {
   id: string;
-  business_name: string | null;
-  category: string | null;
+  business_name: string;
+  category: string;
   town: string | null;
   phone: string | null;
 };
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 async function getBusinesses(): Promise<Business[]> {
   const { data, error } = await supabase
@@ -18,7 +23,7 @@ async function getBusinesses(): Promise<Business[]> {
     .order("business_name", { ascending: true });
 
   if (error) return [];
-  return (data as Business[]) ?? [];
+  return (data as any) ?? [];
 }
 
 export default async function DirectoryPage() {
@@ -32,22 +37,19 @@ export default async function DirectoryPage() {
       <div style={{ display: "grid", gap: 12, marginTop: 16 }}>
         {businesses.length === 0 ? (
           <div style={{ opacity: 0.8 }}>
-            No businesses found. (Tip: set subscription_status = "active" for your test business.)
+            No businesses found. Sign in and create a listing in /dashboard.
           </div>
         ) : (
           businesses.map((b) => (
             <div key={b.id} style={{ border: "1px solid #333", borderRadius: 12, padding: 12 }}>
-              <div style={{ fontWeight: 700 }}>{b.business_name ?? "Business"}</div>
-
+              <div style={{ fontWeight: 700 }}>{b.business_name}</div>
               <div style={{ opacity: 0.8 }}>
-                {b.category ?? "Category"}
-                {b.town ? ` • ${b.town}` : ""}
+                {b.category}
+                {b.town ?  •  : ""}
               </div>
-
-              {b.phone ? <div style={{ marginTop: 8 }}>📞 {b.phone}</div> : null}
-
+              {b.phone ? <div style={{ opacity: 0.8, marginTop: 6 }}>{b.phone}</div> : null}
               <div style={{ marginTop: 10 }}>
-                <a href={`/request?business_id=${encodeURIComponent(b.id)}`}>Request a quote →</a>
+                <a href={/request?business_id=}>Request a quote →</a>
               </div>
             </div>
           ))

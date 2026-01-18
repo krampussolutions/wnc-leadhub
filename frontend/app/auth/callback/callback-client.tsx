@@ -1,35 +1,43 @@
 ﻿"use client";
 
-import { supabase } from "@/lib/supabase";
-import { useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { supabase } from "@/src/lib/supabase";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 export default function CallbackClient() {
-  const router = useRouter();
   const sp = useSearchParams();
+  const next = useMemo(() => sp.get("next") || "/dashboard", [sp]);
+  const code = sp.get("code"); // some flows use code param
+
+  const [status, setStatus] = useState("Completing sign-in...");
 
   useEffect(() => {
     (async () => {
-      const code = sp.get("code");
-      const next = sp.get("next") || "/dashboard";
+      try {
+        // If code exists, exchange it (PKCE)
+        if (code) {
+          const { error } = await supabase.auth.exchangeCodeForSession(code);
+          if (error) throw error;
+        }
 
-      // If we have a code, exchange it for a session
-      if (code) {
-        const { error } = await supabase.auth.exchangeCodeForSession(code);
-        if (error) {
-          router.replace("/login");
+        // Ensure session exists
+        const { data } = await supabase.auth.getSession();
+        if (!data.session) {
+          setStatus("No active session found. Try signing in again.");
           return;
         }
-      }
 
-      // If already logged in (or exchange succeeded), go where we intended
-      router.replace(next);
+        window.location.replace(next);
+      } catch (e: any) {
+        setStatus(e?.message || "Auth callback failed. Try again.");
+      }
     })();
-  }, [router, sp]);
+  }, [code, next]);
 
   return (
     <main style={{ maxWidth: 900, margin: "40px auto", padding: 16 }}>
-      Finishing sign-in…
+      <h1>Signing you in…</h1>
+      <p style={{ opacity: 0.8 }}>{status}</p>
     </main>
   );
 }

@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/src/lib/supabase";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
@@ -21,10 +21,7 @@ export default function RequestClient() {
   const [ok, setOk] = useState("");
   const [err, setErr] = useState("");
 
-  // keep dropdown synced with URL preselect (if user clicks from directory)
-  useEffect(() => {
-    setBusinessId(preselect);
-  }, [preselect]);
+  useEffect(() => setBusinessId(preselect), [preselect]);
 
   useEffect(() => {
     (async () => {
@@ -83,15 +80,11 @@ export default function RequestClient() {
       <form onSubmit={submit} style={{ display: "grid", gap: 10, marginTop: 16 }}>
         <label>
           Business
-          <select
-            value={businessId}
-            onChange={(e) => setBusinessId(e.target.value)}
-            style={{ width: "100%", padding: 8 }}
-          >
+          <select value={businessId} onChange={(e) => setBusinessId(e.target.value)} style={{ width: "100%", padding: 8 }}>
             <option value="">Select…</option>
             {bizList.map((b) => (
               <option key={b.id} value={b.id}>
-                {b.business_name ?? "Business"} {b.town ? `(${b.town})` : ""}
+                {b.business_name ?? "Business"} {b.town ? () : ""}
               </option>
             ))}
           </select>
@@ -99,41 +92,22 @@ export default function RequestClient() {
 
         <label>
           Your name
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            style={{ width: "100%", padding: 8 }}
-          />
+          <input value={name} onChange={(e) => setName(e.target.value)} required style={{ width: "100%", padding: 8 }} />
         </label>
 
         <label>
           Email
-          <input
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            style={{ width: "100%", padding: 8 }}
-          />
+          <input value={email} onChange={(e) => setEmail(e.target.value)} required style={{ width: "100%", padding: 8 }} />
         </label>
 
         <label>
           Phone
-          <input
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            style={{ width: "100%", padding: 8 }}
-          />
+          <input value={phone} onChange={(e) => setPhone(e.target.value)} style={{ width: "100%", padding: 8 }} />
         </label>
 
         <label>
           Message
-          <textarea
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            rows={5}
-            style={{ width: "100%", padding: 8 }}
-          />
+          <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={5} style={{ width: "100%", padding: 8 }} />
         </label>
 
         <button type="submit" style={{ padding: 10 }}>
