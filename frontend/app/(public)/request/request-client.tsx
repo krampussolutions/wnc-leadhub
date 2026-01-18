@@ -84,7 +84,7 @@ export default function RequestClient() {
             <option value="">Select…</option>
             {bizList.map((b) => (
               <option key={b.id} value={b.id}>
-                {b.business_name ?? "Business"} {b.town ? () : ""}
+                {b.business_name ?? "Business"} {b.town ? `(${b.town})` : ""}
               </option>
             ))}
           </select>

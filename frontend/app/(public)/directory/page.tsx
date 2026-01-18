@@ -45,7 +45,7 @@ export default async function DirectoryPage() {
               <div style={{ fontWeight: 700 }}>{b.business_name}</div>
               <div style={{ opacity: 0.8 }}>
                 {b.category}
-                {b.town ?  •  : ""}
+                {b.town ? ` • ${b.town}` : ""}
               </div>
               {b.phone ? <div style={{ opacity: 0.8, marginTop: 6 }}>{b.phone}</div> : null}
               <div style={{ marginTop: 10 }}>
