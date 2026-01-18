@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { supabase } from "@/src/lib/supabase";
+import { supabase } from "@/lib/supabase";
 import { useState } from "react";
 
 export default function LoginClient() {
@@ -13,18 +13,14 @@ export default function LoginClient() {
     setErr("");
     setMsg("");
 
-    const redirectTo = ${window.location.origin}/auth/callback?next=/dashboard;
+    const redirectTo = `${window.location.origin}/auth/callback?next=/dashboard`;
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: { emailRedirectTo: redirectTo },
     });
 
-    if (error) {
-      setErr(error.message);
-      return;
-    }
-
+    if (error) return setErr(error.message);
     setMsg("Check your email for the magic link.");
   }
 
